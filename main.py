@@ -1,7 +1,7 @@
 from functions import *
 
 def run():
-    
+    lista_empresas = LinkedList()
     end = False
     selection = 0
 
@@ -11,7 +11,7 @@ def run():
         selection = pedirNumeroEntero()
         
         if selection == 1:
-            systemConfiguration()
+            systemConfiguration(lista_empresas)
 
         elif selection == 2:
             pass

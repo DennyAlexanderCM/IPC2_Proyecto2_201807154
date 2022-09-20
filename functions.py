@@ -1,3 +1,5 @@
+from linkend_list import LinkedList
+from business import Business
 from xml.dom import minidom
 from tkinter import filedialog
 
@@ -12,7 +14,7 @@ def pedirNumeroEntero():
             print('¡Error, introduce un numero entero!')
     return num  
 
-def systemConfiguration():
+def systemConfiguration(lista_empresas):
     end = False
     selection = 0
 
@@ -27,7 +29,7 @@ def systemConfiguration():
         elif selection == 2:
             pathSystemConfiguration = leerArchivo()
             if pathSystemConfiguration:
-                XMLSystemConfiguration(pathSystemConfiguration)
+                XMLSystemConfiguration(pathSystemConfiguration, lista_empresas)
             else:
                 print("Sin Cambios.")
 
@@ -37,7 +39,7 @@ def systemConfiguration():
         elif selection == 4:
             pathInitialSetup = leerArchivo()
             if pathInitialSetup:
-                print(pathInitialSetup)
+                XMLInitialSetup(pathInitialSetup)
             else:
                 print("Sin Cambios.")
                 
@@ -54,10 +56,9 @@ def leerArchivo():
         return root
     return None 
 
-def XMLSystemConfiguration(data):
+def XMLSystemConfiguration(data, lista_empresas:LinkedList):
     #LISTA QUE CONTRENDRÁ CADA PACIENTE
     doc = minidom.parse(data)
-
     # Elemento raíz del documento
     rootNode = doc.documentElement
     # Obtenemos cada elemento con la etiqueta paciente
@@ -71,7 +72,65 @@ def XMLSystemConfiguration(data):
         # OBTENEMOS EL ELEMENTO
         abreviatura = empresa.getElementsByTagName("abreviatura")[0].firstChild.data
         # OBTENEMOS EL NÚMERO DE PERIODOS
-        listasPuntosAtencion = empresa.getElementsByTagName("listaPuntosAtencion")[0].firstChild.data
-        print(id_empresa, nombre, abreviatura)
+        listasPuntosAtencion = empresa.getElementsByTagName("puntoAtencion")
+        # CREAMOS EL OBJETO EMPRESA
+        print("Empresa: ", id_empresa, nombre, abreviatura)
+
+        for puntoAtencion in listasPuntosAtencion:
+            nombrePuntoAtencion = puntoAtencion.getElementsByTagName("nombre")[0].firstChild.data
+            direccionPuntoAtencion = puntoAtencion.getElementsByTagName("direccion")[0].firstChild.data
+            listaEscritorio = puntoAtencion.getElementsByTagName("escritorio")
+            print("Punto atención: ",nombrePuntoAtencion, direccionPuntoAtencion)
+            for escritorio in listaEscritorio:
+                id_escritorio = escritorio.getAttribute("id")
+                identificacion = escritorio.getElementsByTagName("identificacion")[0].firstChild.data
+                encargado = escritorio.getElementsByTagName("encargado")[0].firstChild.data
+                print("Escritorio: ", id_escritorio, identificacion, encargado)
+        
+        ListaTransacciones = empresa.getElementsByTagName("transaccion")
+        for transaccion in ListaTransacciones:
+            nombretransaccion = transaccion.getElementsByTagName("nombre")[0].firstChild.data
+            tiempoAtencion = transaccion.getElementsByTagName("tiempoAtencion")[0].firstChild.data
+            
+            print("Transaccion: ", nombretransaccion, tiempoAtencion)
+    
+    print("Datos cargadodos...")
+
+def XMLInitialSetup(data):
+    #LISTA QUE CONTRENDRÁ CADA PACIENTE
+    doc = minidom.parse(data)
+    # Elemento raíz del documento
+    rootNode = doc.documentElement
+    # Obtenemos cada elemento con la etiqueta paciente
+    listadoInicial = rootNode.getElementsByTagName("configInicial")
+    
+    for configInicial in listadoInicial:
+        #ID DE LA CONFIG
+        id_config = configInicial.getAttribute("id")
+        #ID DE LA EMPRESA
+        id_empresa = configInicial.getAttribute("idEmpresa")
+        #ID DEL PUNTO
+        id_punto = configInicial.getAttribute("idPunto")
+        # ESCRITORIO ACTIVOS
+        escritorioActivos = configInicial.getElementsByTagName("escritorio")
+        print("Config Inicial: ", id_config, id_empresa, id_punto)
+        for escritorio in escritorioActivos:
+            idEscritorio = escritorio.getAttribute("idEscritorio")
+            print("Escritorio: ",idEscritorio)
+
+        ListaClientes = configInicial.getElementsByTagName("cliente")
+        for cliente in ListaClientes:
+            # DPI DEL CLIENTE
+            dpi = cliente.getAttribute("dpi")
+            nombreCliente = cliente.getElementsByTagName("nombre")[0].firstChild.data
+            ListadoTransacciones = cliente.getElementsByTagName("transaccion")
+            print("Cliente: ",dpi, nombreCliente)
+
+            for transaccion in ListadoTransacciones:
+                # ID DE LA TRANSACCION
+                id_transaccion = transaccion.getAttribute("idTransaccion")
+                # CANTIDAD
+                cantidad = transaccion.getAttribute("cantidad")
+                print("Transacción: ", id_transaccion, cantidad)
     
     print("Datos cargadodos...")
