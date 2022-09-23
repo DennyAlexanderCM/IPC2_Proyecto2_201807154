@@ -1,5 +1,11 @@
+from cmath import nan
+from mimetypes import add_type
 from linkend_list import LinkedList
 from business import Business
+from transaction import Transaction
+from desktop import Desktop
+from stack import Stack
+from attention import Attention
 from xml.dom import minidom
 from tkinter import filedialog
 
@@ -14,7 +20,7 @@ def pedirNumeroEntero():
             print('¡Error, introduce un numero entero!')
     return num  
 
-def systemConfiguration(lista_empresas):
+def systemConfiguration(lista_empresas:LinkedList):
     end = False
     selection = 0
 
@@ -24,7 +30,8 @@ def systemConfiguration(lista_empresas):
         selection = pedirNumeroEntero()
         
         if selection == 1:
-            pass
+            lista_empresas.head = None
+            lista_empresas.last = None
 
         elif selection == 2:
             pathSystemConfiguration = leerArchivo()
@@ -34,7 +41,26 @@ def systemConfiguration(lista_empresas):
                 print("Sin Cambios.")
 
         elif selection == 3:
-            pass
+            end_1 = False
+
+            while(not end_1):
+                correct = False
+                empresa = createNewBussines()
+                lista_empresas.append(empresa)
+
+                print("\n¡Empresa creada!\n¿Desea agregar otra empresa?\n 1. Si\n 2. No")
+                
+                while(not correct):
+                    selection = pedirNumeroEntero()
+        
+                    if selection == 1:
+                        correct = True
+
+                    elif selection == 2:
+                        correct = True
+                        end_1 = True
+                    else:
+                        print("Intente de nuevo") 
 
         elif selection == 4:
             pathInitialSetup = leerArchivo()
@@ -74,26 +100,63 @@ def XMLSystemConfiguration(data, lista_empresas:LinkedList):
         # OBTENEMOS EL NÚMERO DE PERIODOS
         listasPuntosAtencion = empresa.getElementsByTagName("puntoAtencion")
         # CREAMOS EL OBJETO EMPRESA
-        print("Empresa: ", id_empresa, nombre, abreviatura)
+        empresa_obj = Business(id_empresa, nombre, abreviatura)
+        # CREAMOS LA LISTA QUE CONTENDRA LOS PUNTOS DE ATENCION
+        lista_punto_atencion = LinkedList()
 
         for puntoAtencion in listasPuntosAtencion:
+            #ID DEL PUNTO DE ATENCION
+            id_punto_atencion = puntoAtencion.getAttribute("id")
+            # OBTENEMOS EL PUNTO DE ATENCION
             nombrePuntoAtencion = puntoAtencion.getElementsByTagName("nombre")[0].firstChild.data
+            # DIRECCION DEL PUNTO DE ATENCION
             direccionPuntoAtencion = puntoAtencion.getElementsByTagName("direccion")[0].firstChild.data
+            # OBTENEMOS LA LISTA DE ESCRITORIOS
             listaEscritorio = puntoAtencion.getElementsByTagName("escritorio")
-            print("Punto atención: ",nombrePuntoAtencion, direccionPuntoAtencion)
+            # CREAMOS EL OBJETO ATTENTION
+            punto_atencion = Attention(id_punto_atencion, nombrePuntoAtencion, direccionPuntoAtencion)
+            # CREAMOS LA LISTA QUE CONTENDRA LOS ESCRITORIOS
+            lista_escritorios = LinkedList()
+            # RECORREMOS LA LISTA DE ESCRITORIOS
             for escritorio in listaEscritorio:
+                # OBTENEMOS EL ID DEL ESCRITORIO
                 id_escritorio = escritorio.getAttribute("id")
+                # ONTENEMOS LA IDENTIFICACION
                 identificacion = escritorio.getElementsByTagName("identificacion")[0].firstChild.data
+                # OBTENEMOS EL ENCARGADO DEL ESCRITORIO
                 encargado = escritorio.getElementsByTagName("encargado")[0].firstChild.data
-                print("Escritorio: ", id_escritorio, identificacion, encargado)
-        
-        ListaTransacciones = empresa.getElementsByTagName("transaccion")
-        for transaccion in ListaTransacciones:
-            nombretransaccion = transaccion.getElementsByTagName("nombre")[0].firstChild.data
-            tiempoAtencion = transaccion.getElementsByTagName("tiempoAtencion")[0].firstChild.data
+                # CREAMOS EL OBJETO DESKTOP
+                desktop = Desktop(id_escritorio, identificacion, encargado)
+                # AÑADIMOS EL OBJETO ESCRITORIO A LA LISTA
+                lista_escritorios.append(desktop)
             
-            print("Transaccion: ", nombretransaccion, tiempoAtencion)
-    
+            # AÑADIMOS LA LISTA DE ESCRITORIOS AL OBJETO PUNTO DE ATENCION
+            punto_atencion.setListaEscritorio(lista_escritorios)
+            # AÑADIMOS EL PUNTO DE ATENCION A LA LISTA DE PUNTOS DE ATENCION
+            lista_punto_atencion.append(punto_atencion)
+        # AÑADIMOS LA LISTA DE PUNTOS DE ATENCION A LA EMPRESA
+        empresa_obj.puntosAtencion = lista_punto_atencion
+        #  OBTENEMOS LA LISTA DE TRANSACCIONES
+        ListaTransacciones = empresa.getElementsByTagName("transaccion")
+        # CREAMOS LA LISTA QUE CONTENDRA LAS TRANSACCIONES
+        lista_transacciones = LinkedList()
+        # RECORREMOS LA LISTA DE TRANSACCIONES
+        for transaccion in ListaTransacciones:
+            # OBTENEMOS EL ID DE LA TRANSACCION
+            id_transaccion = transaccion.getAttribute("id")
+            # OBTENEMOS EL NOMBRE DE LA TRANSACCION
+            nombretransaccion = transaccion.getElementsByTagName("nombre")[0].firstChild.data
+            # TIEMPO DE LA TRANSACCION
+            tiempoAtencion = transaccion.getElementsByTagName("tiempoAtencion")[0].firstChild.data
+            #CREAMOS EL OBJETO DE LA TRANSACCION
+            transaction = Transaction(id_transaccion, nombretransaccion, tiempoAtencion)
+            # AGREGAMOS LA TRANSACCION A LA LISTA
+            lista_transacciones.append(transaction)
+        
+        # AGREGAMOS LA LISTA DE TRANSACCIONES A LA EMPRESA
+        empresa_obj.transacciones = lista_transacciones
+        # AGREGAMOS LA EMPRESA A LA LISTA QUE CONTIENE LAS EMPRESAS
+        lista_empresas.append(empresa_obj)
     print("Datos cargadodos...")
 
 def XMLInitialSetup(data):
@@ -134,3 +197,175 @@ def XMLInitialSetup(data):
                 print("Transacción: ", id_transaccion, cantidad)
     
     print("Datos cargadodos...")
+
+def imprimirDatos(lista:LinkedList):
+    aux = lista.head
+
+    while aux:
+        empresa:Business = aux.data
+        empresa.printDates()
+        aux_2 = empresa.getPuntosAtencion().head
+        while aux_2:
+            puntoAten = aux_2.data
+            puntoAten.printDates()
+            aux_3 = puntoAten.listaEscritorio.head
+            while aux_3:
+                aux_3.data.printDates()
+                aux_3 = aux_3.next
+            aux_2 = aux_2.next
+
+        aux_2 = empresa.transacciones.head
+        while aux_2:
+            puntoAten = aux_2.data
+            puntoAten.printDates()
+            aux_2 = aux_2.next
+
+        aux = aux.next
+
+def createNewBussines():
+    end = False
+    id_empresa = ""
+    name = ""
+    abrev = ""
+    lista_puntos_atencion = LinkedList()
+    lista_transacciones = LinkedList()
+    print("\n---------- Crear nueva empresas ----------")
+    while(not end):
+        
+        if not(id_empresa):
+            id_empresa = input("Ingrese el ID: ")
+        if not(name):
+            name = input("Ingrese el Nombre: ")
+        if not(abrev):
+            abrev = input("Ingrese abreviatura: ")
+        
+        if id_empresa and name and abrev:
+            
+            empresa = Business(id_empresa, name, abrev)
+            
+            end_1 = False
+            while(not end_1):
+                punto_atencion = createNewAttention()
+                lista_puntos_atencion.append(punto_atencion)
+
+                print("\n¡Punto de atención añadido!\n¿Desea agregar otro punto de atención?\n 1. Si\n 2. No")
+                end_2 = False
+                while(not end_2):
+                    selection = pedirNumeroEntero()
+        
+                    if selection == 1:
+                        end_2 = True
+
+                    elif selection == 2:
+                        empresa.setPuntosAtencion(lista_puntos_atencion)
+                        end_1 = True
+                        end_2 = True
+                    else:
+                        print("Intente de nuevo")
+            
+            end_1 = False
+            while(not end_1):
+                transaccion = createNewTransaction()
+                lista_transacciones.append(transaccion)
+
+                print("\n¡Transacción creada!\n¿Desea crear una nueva transaccion?\n 1. Si\n 2. No")
+                end_2 = False
+                while(not end_2):
+                    selection = pedirNumeroEntero()
+        
+                    if selection == 1:
+                        end_2 = True
+
+                    elif selection == 2:
+                        empresa.setTransacciones(lista_transacciones)
+                        end_1 = True
+                        end_2 = True
+                    else:
+                        print("Intente de nuevo")
+            return empresa
+
+        else:
+            print("\n¡Ingrese todos los datos requeridos!")
+        
+        """
+            print("\n---------- Agregar escritorios ----------")
+            id_escrirorio = input("Ingrese el ID: ")
+            identificacion = input("Ingrese la identifiacion: ")
+            encargado = input("Ingrese el nombre del encargado: ")"""
+
+def createNewAttention():
+    id_punto = ""
+    name = ""
+    direccion = ""
+    lista_escritorio = LinkedList()
+    print("\n---------- Crear Punto de atención ----------")
+    while True:
+        if not(id_punto):
+            id_punto = input("Ingrese el ID: ")
+        if not(name):
+            name = input("Ingrese el Nombre: ")
+        if not(direccion):
+            direccion = input("Ingrese direccion: ")
+        
+        if id_punto and name and direccion:
+            punto_atencion = Attention(id_punto, name, direccion)
+
+            while True:
+                escritorio = createNewDesktop()
+                lista_escritorio.append(escritorio)
+                print("\n¡Escritorio de atención añadido!\n¿Desea agregar otro Escritorio de atención?\n 1. Si\n 2. No")
+                
+                end_2 = False
+                while(not end_2):
+                    selection = pedirNumeroEntero()
+
+                    if selection == 1:
+                        end_2 = True
+
+                    elif selection == 2:
+                        punto_atencion.setListaEscritorio(lista_escritorio)
+                        return punto_atencion
+                    else:
+                        print("Intente de nuevo")
+                
+
+        else:
+            print("¡Ingrese todos los datos requeridos!")
+
+def createNewDesktop():
+    id = ""
+    identificacion = ""
+    encargado = ""
+    print("\n---------- Crear escritorio de servicio ----------")
+    while True:
+        if not(id):
+            id = input("Ingrese el ID: ")
+        if not(identificacion):
+            identificacion = input("Ingrese la identificación: ")
+        if not(encargado):
+            encargado = input("Ingrese el nombre del encargado: ")
+        
+        if id and identificacion and encargado:
+            escritorio = Desktop(id, identificacion, encargado)
+            return escritorio
+        else:
+            print("¡Ingrese todos los datos requeridos!")
+
+def createNewTransaction():
+    id = ""
+    name = ""
+    tiempoAtencion = ""
+    print("\n---------- Crear nueva transaccion ----------")
+    while True:
+        if not(id):
+            id = input("Ingrese el ID: ")
+        if not(name):
+            name = input("Ingrese la identificación: ")
+        if not(tiempoAtencion):
+            tiempoAtencion = input("Ingrese el nombre del encargado: ")
+        
+        if id and name and tiempoAtencion:
+            transaccion = Transaction(id, name, tiempoAtencion)
+            return transaccion
+        else:
+            print("¡Ingrese todos los datos requeridos!")

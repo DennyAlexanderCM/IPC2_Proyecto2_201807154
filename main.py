@@ -14,7 +14,7 @@ def run():
             systemConfiguration(lista_empresas)
 
         elif selection == 2:
-            pass
+            imprimirDatos(lista_empresas)
 
         elif selection == 3:
             pass
