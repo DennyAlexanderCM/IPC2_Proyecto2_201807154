@@ -1,5 +1,4 @@
-from cmath import nan
-from mimetypes import add_type
+from client import Client
 from linkend_list import LinkedList
 from business import Business
 from transaction import Transaction
@@ -8,6 +7,8 @@ from stack import Stack
 from attention import Attention
 from xml.dom import minidom
 from tkinter import filedialog
+from initial_configuration import InitialConfiguration
+from initial_transaction import InitTransaction
 
 def pedirNumeroEntero():
     correcto=False
@@ -20,7 +21,7 @@ def pedirNumeroEntero():
             print('¡Error, introduce un numero entero!')
     return num  
 
-def systemConfiguration(lista_empresas:LinkedList):
+def systemConfiguration(lista_empresas:LinkedList, configuracion_inicial):
     end = False
     selection = 0
 
@@ -29,9 +30,11 @@ def systemConfiguration(lista_empresas:LinkedList):
         \n---------- Configuración de empresas ----------\n 1. Limpiar sistema\n 2. Cargar archivo (Configuracion sistema)\n 3. Crear nueva empresa\n 4. Cargar archivo (Configuración inicial)\n 5. Regresar""")
         selection = pedirNumeroEntero()
         
+        # VACIA LA LISTA DE LOS DATOS
         if selection == 1:
-            lista_empresas.head = None
-            lista_empresas.last = None
+            lista_empresas.eliminardatos()
+            configuracion_inicial.eliminardatos()
+            print("¡Datos eliminados")
 
         elif selection == 2:
             pathSystemConfiguration = leerArchivo()
@@ -65,15 +68,14 @@ def systemConfiguration(lista_empresas:LinkedList):
         elif selection == 4:
             pathInitialSetup = leerArchivo()
             if pathInitialSetup:
-                XMLInitialSetup(pathInitialSetup)
+                XMLInitialSetup(pathInitialSetup, configuracion_inicial)
             else:
-                print("Sin Cambios.")
+                print("Ningún archivo seleccionado")
                 
         elif selection == 5:
             end = True
         else:
             print("Intente de nuevo") 
-
 
 def leerArchivo():
     #obtenemos la direccion local del archivo
@@ -157,9 +159,9 @@ def XMLSystemConfiguration(data, lista_empresas:LinkedList):
         empresa_obj.transacciones = lista_transacciones
         # AGREGAMOS LA EMPRESA A LA LISTA QUE CONTIENE LAS EMPRESAS
         lista_empresas.append(empresa_obj)
-    print("Datos cargadodos...")
+    print("¡Datos cargados!")
 
-def XMLInitialSetup(data):
+def XMLInitialSetup(data, configuracion_inicial:LinkedList):
     #LISTA QUE CONTRENDRÁ CADA PACIENTE
     doc = minidom.parse(data)
     # Elemento raíz del documento
@@ -172,31 +174,46 @@ def XMLInitialSetup(data):
         id_config = configInicial.getAttribute("id")
         #ID DE LA EMPRESA
         id_empresa = configInicial.getAttribute("idEmpresa")
-        #ID DEL PUNTO
+        #ID DEL PUNTO DE ATENCION
         id_punto = configInicial.getAttribute("idPunto")
+        #CREAMOS EL OBJETO DE LA CONFIGURACIONINICIAL
+        configuracion = InitialConfiguration(id_config, id_empresa, id_punto)
+        #CREAMOS LA PILA QUE CONTENDRA LOS ESCRIORIOS
+        lista_escritorios = Stack()
+        #CREAMOS LA LISTA QUE CONTENDRA LOS CLIENTES
+        lista_clientes = LinkedList()
         # ESCRITORIO ACTIVOS
         escritorioActivos = configInicial.getElementsByTagName("escritorio")
-        print("Config Inicial: ", id_config, id_empresa, id_punto)
         for escritorio in escritorioActivos:
-            idEscritorio = escritorio.getAttribute("idEscritorio")
-            print("Escritorio: ",idEscritorio)
+            id_escritorio = escritorio.getAttribute("idEscritorio")
+            lista_escritorios.insert(id_escritorio)
 
         ListaClientes = configInicial.getElementsByTagName("cliente")
         for cliente in ListaClientes:
             # DPI DEL CLIENTE
             dpi = cliente.getAttribute("dpi")
             nombreCliente = cliente.getElementsByTagName("nombre")[0].firstChild.data
+            # CREAMOS EL OBJETO CLIENTE
+            obj_cliente = Client(dpi, nombreCliente)
+            lista_transacciones = LinkedList()
             ListadoTransacciones = cliente.getElementsByTagName("transaccion")
-            print("Cliente: ",dpi, nombreCliente)
 
             for transaccion in ListadoTransacciones:
                 # ID DE LA TRANSACCION
                 id_transaccion = transaccion.getAttribute("idTransaccion")
                 # CANTIDAD
                 cantidad = transaccion.getAttribute("cantidad")
-                print("Transacción: ", id_transaccion, cantidad)
-    
-    print("Datos cargadodos...")
+                # AGREGAMOS AL LISTADO
+                lista_transacciones.append(InitTransaction(id_transaccion, cantidad))
+            
+            obj_cliente.lista_transacciones = lista_transacciones
+            lista_clientes.append(obj_cliente)
+        
+        configuracion.escritorios_activos = lista_escritorios
+        configuracion.listado_clientes = lista_clientes
+        configuracion_inicial.append(configuracion)
+
+    print("¡Datos cargados!")
 
 def imprimirDatos(lista:LinkedList):
     aux = lista.head
@@ -231,7 +248,6 @@ def createNewBussines():
     lista_transacciones = LinkedList()
     print("\n---------- Crear nueva empresas ----------")
     while(not end):
-        
         if not(id_empresa):
             id_empresa = input("Ingrese el ID: ")
         if not(name):
@@ -286,12 +302,6 @@ def createNewBussines():
 
         else:
             print("\n¡Ingrese todos los datos requeridos!")
-        
-        """
-            print("\n---------- Agregar escritorios ----------")
-            id_escrirorio = input("Ingrese el ID: ")
-            identificacion = input("Ingrese la identifiacion: ")
-            encargado = input("Ingrese el nombre del encargado: ")"""
 
 def createNewAttention():
     id_punto = ""
@@ -362,10 +372,111 @@ def createNewTransaction():
         if not(name):
             name = input("Ingrese la identificación: ")
         if not(tiempoAtencion):
-            tiempoAtencion = input("Ingrese el nombre del encargado: ")
+            tiempoAtencion = input("Ingrese el tiempo de atencion: ")
         
         if id and name and tiempoAtencion:
             transaccion = Transaction(id, name, tiempoAtencion)
             return transaccion
         else:
             print("¡Ingrese todos los datos requeridos!")
+
+def selectBussines(lista_empresas:LinkedList):
+    aux = lista_empresas.head
+    i = 1
+
+    print("\n---------- Seleccionar empresa ----------")
+    while aux:
+        print(str(i)+" "+aux.data.getNombre())
+        aux = aux.next
+        i += 1
+    num = pedirNumeroEntero()
+    if num <= i and num > 0:
+        empresa = lista_empresas.searchDate(num)
+        return empresa
+    else:
+        print("¡Ingrese una opción correcta!")
+
+def selectPoint(empresa:Business):
+    puntos_atencion:LinkedList = empresa.getPuntosAtencion()
+    aux = puntos_atencion.head
+    i = 1
+    print("\n---------- Seleccionar punto de atención ----------")
+    while aux:
+        print(str(i)+" "+aux.data.getNombre())
+        aux = aux.next
+        i += 1
+    num = pedirNumeroEntero()
+    if num <= i and num > 0:
+        pto_atencion = puntos_atencion.searchDate(num)
+        return pto_atencion
+    else:
+        print("¡Ingrese una opción correcta!")
+
+def printDatesConfiguration(Lista:LinkedList):
+    aux = Lista.head
+    while aux:
+        date:InitialConfiguration = aux.data
+        print("Configuracion:")
+        print(date.getId(), date.getIdEmpresa(), date.getIdPunto())
+        escritorios:Stack = date.escritorios_activos
+        aux_2 = escritorios.head
+        while aux_2:
+            print(aux_2.data)
+            aux_2 = aux_2.next
+        
+        clientes:LinkedList = date.listado_clientes
+        aux_2 = clientes.head
+        while aux_2:
+            date_1:Client = aux_2.data
+            print("Cliente:")
+            print(date_1.getDPI(), date_1.getNombre())
+
+            transacciones = date_1.lista_transacciones
+
+            aux_3 = transacciones.head
+            while aux_3:
+                date_2:InitTransaction = aux_3.data
+                print(date_2.id_transaccion, date_2.cantidad)
+                aux_3 = aux_3.next
+            aux_2 = aux_2.next
+        aux = aux.next
+
+def startTest(empresa, punto_atencion):
+    end = False
+    selection = 0
+
+    while not end:
+        print("""
+---------- Configuración de empresas ----------
+1. Ver estado de punto de atención
+2. Activar escritorio
+3. Desactivar escritorio
+4. Atender Cliente
+5. Solicitud de atención
+6. Simular actividad
+7. Regresar""")
+
+        selection = pedirNumeroEntero()
+        
+        # VACIA LA LISTA DE LOS DATOS
+        if selection == 1:
+            pass
+
+        elif selection == 2:
+            pass
+
+        elif selection == 3:
+            pass
+
+        elif selection == 4:
+            pass
+        elif selection == 5:
+            pass
+
+        elif selection == 6:
+            pass
+                
+        elif selection == 7:
+            end = True
+        else:
+            print("Intente de nuevo")

@@ -2,8 +2,14 @@ from functions import *
 
 def run():
     lista_empresas = LinkedList()
+    configuracion_inicial = LinkedList()
+    
     end = False
     selection = 0
+
+    # VARIABLES
+    empresa = None
+    pto_atencion = None
 
     while not end:
         print("\n------------------ Menú ------------------\n  1. Configuración de empresas\n  2. Seleccionar Empresa y puntos de atención\n  3. Manejo de puntos de atención\n  4. Salir")
@@ -11,13 +17,17 @@ def run():
         selection = pedirNumeroEntero()
         
         if selection == 1:
-            systemConfiguration(lista_empresas)
+            systemConfiguration(lista_empresas, configuracion_inicial)
 
         elif selection == 2:
-            imprimirDatos(lista_empresas)
+            empresa = selectBussines(lista_empresas)
+            pto_atencion = selectPoint(empresa)
 
         elif selection == 3:
-            pass
+            if empresa !=None and pto_atencion != None:
+                startTest(empresa, pto_atencion)
+            else:
+                print("Datos incorrectos")
                 
         elif selection == 4:
             print("Finalizando programa...")

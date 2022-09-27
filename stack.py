@@ -51,5 +51,3 @@ class Stack:
         while aux:
             print(aux.data)
             aux = aux.next
-
-

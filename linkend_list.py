@@ -44,5 +44,11 @@ class LinkedList:
                 return i.data
             else:
                 n +=1 
-                i = i.next  
+                i = i.next
         return False
+    
+    def eliminardatos(self):
+        if self.length() > 0:
+            self.head = None
+            self.last = None
+            
