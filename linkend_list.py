@@ -3,7 +3,6 @@ class Node:
     def __init__(self,data):
         self.data = data
         self.next = None
-        self.prev = None
 
 #CLASE DE LA LISTA ENLAZADA PARA GUARGAR LOS PATRONES DE CADA PISO
 class LinkedList:
@@ -23,7 +22,6 @@ class LinkedList:
             self.last = nodo
         else:
             self.last.next = nodo
-            nodo.prev = self.last
             self.last = nodo
     
     # RETORNAR EL NÚMERO DE ELEMENTOS
@@ -51,4 +49,12 @@ class LinkedList:
         if self.length() > 0:
             self.head = None
             self.last = None
+    
+    def pop(self):
+        if not self.emply():
+            return None
+        else:
+            aux = self.head
+            self.head = self.head.next
+            return aux.data
             

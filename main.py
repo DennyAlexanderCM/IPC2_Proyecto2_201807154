@@ -25,7 +25,11 @@ def run():
 
         elif selection == 3:
             if empresa !=None and pto_atencion != None:
-                startTest(empresa, pto_atencion)
+                configuraciones = searchConfiguration(empresa.getId(), pto_atencion.getId(), configuracion_inicial)
+                if configuraciones:
+                   startTest(empresa, pto_atencion, configuraciones)
+                else:
+                    print("Sin configuraciones encontradas")
             else:
                 print("Datos incorrectos")
                 

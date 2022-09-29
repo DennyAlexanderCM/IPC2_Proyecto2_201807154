@@ -1,9 +1,12 @@
+from linkend_list import LinkedList
+from stack import Stack
 class Attention():
     def __init__(self, id, nombre, direccion):
         self.id = id
         self.nombre = nombre
         self.direccion = direccion
-        self.listaEscritorio = None
+        self.listaEscritorio = LinkedList()
+        self.escritoriosActivos = Stack()
     
     def getId(self):
         return self.id
@@ -29,5 +32,8 @@ class Attention():
     def setListaEscritorio(self, listaEscitorio):
         self.listaEscritorio = listaEscitorio   
 
-    def printDates(self):
-        print(self.id, self.nombre, self.direccion) 
+    def addEscritorio(self, escritorio):
+        self.listaEscritorio.append(escritorio)
+    
+    def addEscritorioActivo(self, activo):
+        self.escritoriosActivos.insert(activo)

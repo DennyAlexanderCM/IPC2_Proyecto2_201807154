@@ -3,8 +3,6 @@ class Node:
     def __init__(self,data):
         self.data = data
         self.next = None
-        self.prev = None
-
 #CLASE DE LA LISTA ENLAZADA PARA GUARGAR LOS PATRONES DE CADA PISO
 class Stack:
     def __init__(self):
@@ -22,7 +20,6 @@ class Stack:
             self.head = nodo
         else:
             nodo.next = self.head
-            self.head.prev = nodo
             self.head = nodo
     
     # RETORNAR EL NÚMERO DE ELEMENTOS
@@ -51,3 +48,11 @@ class Stack:
         while aux:
             print(aux.data)
             aux = aux.next
+    
+    def pop(self):
+        if not self.emply():
+            return None
+        else:
+            aux = self.head
+            self.head = self.head.next
+            return aux.data

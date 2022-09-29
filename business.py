@@ -1,10 +1,11 @@
+from linkend_list import LinkedList
 class Business:
     def __init__(self, id_empresa, nombre, abreviatura):
         self.id_empresa = id_empresa
         self.nombre = nombre
         self.abreviatura = abreviatura
-        self.puntosAtencion = None
-        self.transacciones = None
+        self.puntosAtencion = LinkedList()
+        self.transacciones = LinkedList()
     
     def getId(self):
         return self.id_empresa
@@ -36,6 +37,9 @@ class Business:
     def setTransacciones(self, transacciones):
         self.transacciones = transacciones
     
-    def printDates(self):
-        print(self. id_empresa, self.nombre, self.abreviatura)
+    def addPuntoAtencion(self, punto):
+        self.puntosAtencion.append(punto)
+    
+    def addTransaccion(self, transaccion):
+        self.transacciones.append(transaccion)
     
