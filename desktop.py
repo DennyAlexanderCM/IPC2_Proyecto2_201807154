@@ -1,3 +1,4 @@
+from linkend_list import LinkedList
 class Desktop():
     def __init__(self, id, identificacion, encargado):
         self.id = id
@@ -5,6 +6,8 @@ class Desktop():
         self.encargado = encargado
         self.estado = False
         self.cliente = None
+        self.atendidos = 0
+        self.tiempos_atencion = LinkedList()
     
     def getId(self):
         return self.id
@@ -17,6 +20,9 @@ class Desktop():
     
     def getEstado(self):
         return self.estado
+    
+    def getAtendidos(self):
+        return self.atendidos
     
     def getCliente(self):
         return self.cliente
@@ -41,5 +47,16 @@ class Desktop():
     
     def clienteAtendido(self):
         self.cliente = None
+        self.atendidos += 1
     
+    def addTiempoAtencion(self, tiempo):
+        self.tiempos_atencion.append(tiempo)
     
+    def promedioAtencion(self):
+        return self.tiempos_atencion.tiempoPromedio()
+    
+    def minimoAtencion(self):
+        return self.tiempos_atencion.tiempoMenor()
+    
+    def maximoAtencion(self):
+        return self.tiempos_atencion.tiempoMayor()

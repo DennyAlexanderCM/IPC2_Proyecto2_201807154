@@ -21,7 +21,10 @@ def run():
 
         elif selection == 2:
             empresa = selectBussines(lista_empresas)
-            pto_atencion = selectPoint(empresa)
+            if empresa:
+                pto_atencion = selectPoint(empresa)
+            else:
+                print("Seleccione la empresa")
 
         elif selection == 3:
             if empresa !=None and pto_atencion != None:

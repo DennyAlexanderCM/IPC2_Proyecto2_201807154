@@ -7,8 +7,8 @@ from stack import Stack
 from attention import Attention
 from xml.dom import minidom
 from tkinter import filedialog
-from initial_configuration import InitialConfiguration
-from initial_transaction import InitTransaction
+from initial_configuration import InitialConfiguration, InitTransaction
+from graphviz import Digraph
 
 def pedirNumeroEntero():
     correcto=False
@@ -40,29 +40,12 @@ def systemConfiguration(lista_empresas:LinkedList, configuracion_inicial):
             if pathSystemConfiguration:
                 XMLSystemConfiguration(pathSystemConfiguration, lista_empresas)
             else:
-                print("Sin Cambios.")
+                print("Ningún archivo seleccionado")
 
         elif selection == 3:
-            end_1 = False
-
-            while(not end_1):
-                correct = False
-                empresa = createNewBussines()
-                lista_empresas.append(empresa)
-
-                print("\n¡Empresa creada!\n¿Desea agregar otra empresa?\n 1. Si\n 2. No")
-                
-                while(not correct):
-                    selection = pedirNumeroEntero()
-        
-                    if selection == 1:
-                        correct = True
-
-                    elif selection == 2:
-                        correct = True
-                        end_1 = True
-                    else:
-                        print("Intente de nuevo") 
+            empresa = createNewBussines()
+            lista_empresas.append(empresa)
+            print("\n¡Empresa creada!")
 
         elif selection == 4:
             pathInitialSetup = leerArchivo()
@@ -101,7 +84,7 @@ def XMLSystemConfiguration(data, lista_empresas:LinkedList):
         # OBTENEMOS EL NÚMERO DE PERIODOS
         listasPuntosAtencion = empresa.getElementsByTagName("puntoAtencion")
         # CREAMOS EL OBJETO EMPRESA
-        empresa_obj = Business(id_empresa, nombre, abreviatura)
+        empresa_obj = Business(id_empresa, nombre.strip(), abreviatura)
 
         for puntoAtencion in listasPuntosAtencion:
             #ID DEL PUNTO DE ATENCION
@@ -113,7 +96,7 @@ def XMLSystemConfiguration(data, lista_empresas:LinkedList):
             # OBTENEMOS LA LISTA DE ESCRITORIOS
             listaEscritorio = puntoAtencion.getElementsByTagName("escritorio")
             # CREAMOS EL OBJETO ATTENTION
-            punto_atencion = Attention(id_punto_atencion, nombrePuntoAtencion, direccionPuntoAtencion)
+            punto_atencion = Attention(id_punto_atencion, nombrePuntoAtencion.strip(), direccionPuntoAtencion)
             # RECORREMOS LA LISTA DE ESCRITORIOS
             for escritorio in listaEscritorio:
                 # OBTENEMOS EL ID DEL ESCRITORIO
@@ -138,12 +121,10 @@ def XMLSystemConfiguration(data, lista_empresas:LinkedList):
             nombretransaccion = transaccion.getElementsByTagName("nombre")[0].firstChild.data
             # TIEMPO DE LA TRANSACCION
             tiempoAtencion = transaccion.getElementsByTagName("tiempoAtencion")[0].firstChild.data
-            tiempoAtencion = tiempoAtencion.strip()
             #CREAMOS EL OBJETO DE LA TRANSACCION
-            transaction = Transaction(id_transaccion, nombretransaccion, int(tiempoAtencion))
+            transaction = Transaction(id_transaccion.strip(), nombretransaccion, float(tiempoAtencion.strip()))
             # AGREGAMOS LA TRANSACCION A LA LISTA
             empresa_obj.addTransaccion(transaction)
-        
         # AGREGAMOS LA EMPRESA A LA LISTA QUE CONTIENE LAS EMPRESAS
         lista_empresas.append(empresa_obj)
     print("¡Datos cargados!")
@@ -191,7 +172,7 @@ def XMLInitialSetup(data, configuracion_inicial:LinkedList):
                 # CANTIDAD
                 cantidad = transaccion.getAttribute("cantidad")
                 # AGREGAMOS AL LISTADO
-                lista_transacciones.append(InitTransaction(id_transaccion, cantidad.strip()))
+                lista_transacciones.append(InitTransaction(id_transaccion.strip(), cantidad.strip()))
             
             obj_cliente.lista_transacciones = lista_transacciones
             lista_clientes.append(obj_cliente)
@@ -201,7 +182,6 @@ def XMLInitialSetup(data, configuracion_inicial:LinkedList):
         configuracion_inicial.append(configuracion)
 
     print("¡Datos cargados!")
-
 
 def createNewBussines():
     end = False
@@ -268,7 +248,6 @@ def createNewAttention():
     id_punto = ""
     name = ""
     direccion = ""
-    lista_escritorio = LinkedList()
     print("\n---------- Crear Punto de atención ----------")
     while True:
         if not(id_punto):
@@ -342,41 +321,50 @@ def createNewTransaction():
 
 def selectBussines(lista_empresas:LinkedList):
     aux = lista_empresas.head
-    i = 0
-
-    print("\n---------- Seleccionar empresa ----------")
-    while aux:
-        i += 1
-        print(str(i)+". "+aux.data.getNombre())
-        aux = aux.next
+    if aux:
+        i = 0
+        print("\n---------- Seleccionar empresa ----------")
+        while aux:
+            i += 1
+            print(str(i)+". "+aux.data.getNombre())
+            aux = aux.next
         
-    
-    while True:
-        num = pedirNumeroEntero()
-        if num <= i and num > 0:
-            empresa = lista_empresas.searchDate(num)
-            return empresa
-        else:
-            print("¡Ingrese una opción correcta!")
+        while True:
+            num = pedirNumeroEntero()
+            if num <= i and num > 0:
+                empresa = lista_empresas.searchDate(num)
+                return empresa
+            else:
+                print("¡Ingrese una opción correcta!")
+    else:
+
+        print("¡Lista vacía!")
+        return None
 
 def selectPoint(empresa:Business):
-    puntos_atencion:LinkedList = empresa.getPuntosAtencion()
-    aux = puntos_atencion.head
-    i = 0
-    print("\n---------- Seleccionar punto de atención ----------")
-    while aux:
-        i += 1
-        print(str(i)+". "+aux.data.getNombre())
-        aux = aux.next
-        
+    if empresa:
+        puntos_atencion:LinkedList = empresa.getPuntosAtencion()
+        aux = puntos_atencion.head
+        if aux:
+            i = 0
+            print("\n---------- Seleccionar punto de atención ----------")
+            while aux:
+                i += 1
+                print(str(i)+". "+aux.data.getNombre())
+                aux = aux.next
 
-    while True:
-        num = pedirNumeroEntero()
-        if num <= i and num > 0:
-            pto_atencion = puntos_atencion.searchDate(num)
-            return pto_atencion
+            while True:
+                num = pedirNumeroEntero()
+                if num <= i and num > 0:
+                    pto_atencion = puntos_atencion.searchDate(num)
+                    return pto_atencion
+                else:
+                    print("¡Ingrese una opción correcta!")
         else:
-            print("¡Ingrese una opción correcta!")
+            print("¡Lista vacía!")
+            return None
+    else:
+        return None
 
 def searchConfiguration(id_emresa, id_punto, configuraciones:LinkedList):
     aux = configuraciones.head
@@ -391,35 +379,16 @@ def startTest(empresa: Business, punto_atencion:Attention, configuracion:Initial
     escritorios_activos:Stack = configuracion.escritorios_activos
     lista_escritorios:LinkedList = punto_atencion.getListaEscritorio()
     transacciones = empresa.getTransacciones()
-    clientes = configuracion.listado_clientes
+    clientes:LinkedList = configuracion.listado_clientes
     end = False
     selection = 0
 
     estimarTiempo(clientes, transacciones)
 
     while not end:
-        # ACTIVAR ESCRITORIOS
-        aux = escritorios_activos.head
-        while aux:
-            aux_2 = lista_escritorios.head
-            while aux_2:
-                escritorio = aux_2.data
-                if escritorio.getId() == aux.data:
-                    escritorio.activar()
-                aux_2 = aux_2.next
-            aux=aux.next
-    
-        # ASIGNAR CLIENTES A ESCRITORIOS
-        aux = lista_escritorios.head
-        while aux :
-            escritorio:Desktop = aux.data
-            if escritorio.getEstado():
-                if escritorio.getCliente() is None:
-                    cliente = clientes.pop()
-                    if cliente:
-                        escritorio.atenderCliente(cliente)
-            aux = aux.next
-
+        #ASIGNAR CLIENTES A LOS ESCRITORIOS
+        asignarEscritorios(punto_atencion, configuracion)
+        tiempoPromedioEspera(clientes, punto_atencion)
         print("""
 ---------- Configuración de empresas ----------
 1. Ver estado de punto de atención
@@ -431,31 +400,10 @@ def startTest(empresa: Business, punto_atencion:Attention, configuracion:Initial
 7. Regresar""")
 
         selection = pedirNumeroEntero()
-        
-        # VACIA LA LISTA DE LOS DATOS
+        # GRÁFICA EL ESTADO ACTUAL DEL PUNTO DE ATENCION
         if selection == 1:
-            activos_n = 0
-            desactivados_n = 0
-            aux = lista_escritorios.head
-            while aux:
-                escritorio:Desktop = aux.data
-                if escritorio.getEstado():
-                    activos_n += 1
-
-                else:
-                    desactivados_n += 1
-
-                aux = aux.next
-            
-            print("Escritorios activos: "+ str(activos_n))
-            print("Escritorios inactivos: "+ str(desactivados_n))
-            print("Clientes pendietes de atención:" + str(clientes.length()))
-            aux = clientes.head
-            while aux:
-                cliente:Client = aux.data
-                print(cliente.getNombre(), cliente.getTiempo())
-                aux = aux.next
-                
+            graficarEstado(punto_atencion, clientes)
+        # ACTIVA EL SIGUIENTE ESCRITORIO DESACTIVADO
         elif selection == 2:
             activar = True
             aux = lista_escritorios.head
@@ -466,85 +414,63 @@ def startTest(empresa: Business, punto_atencion:Attention, configuracion:Initial
                     escritorios_activos.insert(escritorio.getId())
                     activar = False
                 aux= aux.next
-
+        # DESACTIVA EL ULTIMO ESCRITORIO DESACTIVADO
         elif selection == 3:
             # ELIMINAMOS Y RETORNA EL VALOR ELIMINADO
             escritorio = escritorios_activos.pop()
             if escritorio:
-                print("Escritorio desactivado: "+ escritorio)
+                desactivar = True
+                aux = lista_escritorios.head
+                while aux and desactivar:
+                    escritorio_1:Desktop = aux.data
+                    if escritorio_1.getId() == escritorio:
+                        escritorio_1.desactivar()
+                        activar = False
+                        print("Escritorio desactivado: "+ escritorio)
+                    aux= aux.next
             else:
                 print("Ningún escritorio activo")
-        # ATENDER CLIENTE
+        # ATENDER CLIENTE AL CLIENTE PROXIMO
         elif selection == 4:
-            tiempos = LinkedList()
-            aux = lista_escritorios.head
-            while aux:
-                if aux.data.getCliente():
-                    cliente: Client = aux.data.getCliente()
-                    tiempos.append(cliente.getTiempo())
-                aux = aux.next
-            
-            min = tiempoMenor(tiempos)
-            if min:
-                aux = lista_escritorios.head
-                while aux:
-                    cliente:Client = aux.data.getCliente()
-                    if cliente:
-                        tiempo = cliente.getTiempo()
-                        if tiempo == min:
-                            print("Cliente: ",cliente.getNombre()," Atendido")
-                            aux.data.clienteAtendido()
-
-                        else:
-                            cliente.quitarTiempo(min)
-                    aux = aux.next
-            else:
-                print("Error, ningún cliente atendido")
-        #Solicitud de atencion
+            atenderCliente(punto_atencion, clientes)
+        # SOLICITUD DE ATENCION --- AGREGAMOS MANUALMENTE UN CLIENTE AL SISTEMA 
         elif selection == 5:
             end_1 = False
-
             while(not end_1):
-                correct = False
                 cliente = crearCliente(transacciones)
+                if clientes.emply():
+                    tiempo_espera = clientes.last.data.getTiempoAtencion()+ clientes.last.data.getTiempoEsperaPromedio()
+                    print("Tiempo promedio de espera: ", tiempo_espera)
+                    end_1 = True
+                else:
+                    print("¡Sin tiempo de espera!")
+
                 clientes.append(cliente)
 
-                print("\n¡Cliente agregado!\n¿Desea agregar otro cliente?\n 1. Si\n 2. No")
-                
-                while(not correct):
-                    selection = pedirNumeroEntero()
-                    if selection == 1:
-                        correct = True
-
-                    elif selection == 2:
-                        correct = True
-                        end_1 = True
-                    else:
-                        print("Intente de nuevo")
+                print("\n¡Cliente agregado!")
                 
                 estimarTiempo(clientes, transacciones)
 
         elif selection == 6:
-            pass
+            end_1 = False
+            while(not end_1):
+                end_1 = True
+                atenderCliente(punto_atencion,clientes)
+                asignarEscritorios(punto_atencion, configuracion)
+                tiempoPromedioEspera(clientes, punto_atencion)
+                graficarEstado(punto_atencion, clientes)
+                aux = punto_atencion.getListaEscritorio().head
+                while aux:
+                    cliente:Client = aux.data.getCliente()
+                    if cliente:
+                        end_1 = False
+                    aux = aux.next
                 
+            #graficarEstado(punto_atencion, clientes)
         elif selection == 7:
             end = True
         else:
             print("Intente de nuevo")
-
-def tiempoMenor(lista:LinkedList):
-    aux = lista.head
-    menor = aux
-    if aux:
-        while aux:
-            if aux.next:
-                if menor.data > aux.next.data:
-                    menor = aux.next
-            else:
-                return menor.data
-            aux = aux.next
-    else:
-        return None
 
 def crearCliente(lista_transacciones:LinkedList):
     end = False
@@ -571,7 +497,7 @@ def crearCliente(lista_transacciones:LinkedList):
                 while(not end_2):
                     if not(id_transaccion):
                         id_transaccion = crearTransaccion(lista_transacciones)
-                    if cantidad ==0:
+                    if cantidad == 0:
                         print("\n>>Cantidad de transacciones")
                         cantidad = pedirNumeroEntero()
                     if id_transaccion and cantidad != 0:
@@ -611,12 +537,11 @@ def crearTransaccion(listaTransacciones:LinkedList):
         else:
             print("¡Ingrese una opción correcta!")
     
-
 def estimarTiempo(clientes, transacciones):
     # ESTIMAR TIEMPO DE ATENCION CADA CLIENTE
     aux = clientes.head
     while aux:
-        cliente = aux.data
+        cliente:Client = aux.data
         time = 0
         aux_2 = cliente.lista_transacciones.head
         while aux_2:
@@ -625,7 +550,7 @@ def estimarTiempo(clientes, transacciones):
             while aux_3:
                 transaccion_1 = aux_3.data
                 if transaccion.id_transaccion == transaccion_1.getId():
-                    tiempo = int(transaccion_1.getTiempo())
+                    tiempo = transaccion_1.getTiempo()
                     n_transaccion = int(transaccion.cantidad)
                     tiempo_tot = (tiempo*n_transaccion)
                     transaccion.time = tiempo_tot
@@ -633,4 +558,123 @@ def estimarTiempo(clientes, transacciones):
                 aux_3 = aux_3.next
             aux_2 = aux_2.next
         cliente.tiempoT = time
+        cliente.tiempo_atencion = time
         aux = aux.next
+
+def tiempoPromedioEspera(clientes:LinkedList, puntos_atencion:Attention):
+    prom_tiempo = puntos_atencion.promedioAtencion()
+    aux = clientes.head
+    while aux:
+        cliente:Client = aux.data
+        cliente.setTiempoEsperaPromedio(prom_tiempo)
+        prom_tiempo += cliente.tiempo_atencion
+        aux = aux.next
+
+def asignarEscritorios(punto_atencion:Attention, configuracion:InitialConfiguration):
+    # ACTIVAR ESCRITORIOS
+    aux = configuracion.escritorios_activos.head
+    while aux:
+        aux_2 = punto_atencion.getListaEscritorio().head
+        while aux_2:
+            escritorio = aux_2.data
+            if escritorio.getId() == aux.data:
+                escritorio.activar()
+            aux_2 = aux_2.next
+        aux=aux.next
+    
+    # ASIGNAR CLIENTES A ESCRITORIOS
+    aux = punto_atencion.getListaEscritorio().head
+    while aux :
+        escritorio:Desktop = aux.data
+        if escritorio.getEstado():
+            if escritorio.getCliente() is None:
+                cliente = configuracion.listado_clientes.pop()
+                if cliente:
+                    escritorio.atenderCliente(cliente)
+        aux = aux.next
+
+def atenderCliente(punto_atencion:Attention, clientes:LinkedList):
+    lista_escritorios = punto_atencion.getListaEscritorio()
+    tiempos = LinkedList()
+    aux = lista_escritorios.head
+    while aux:
+        if aux.data.getCliente():
+            cliente: Client = aux.data.getCliente()
+            tiempos.append(cliente.getTiempo())
+        aux = aux.next
+            
+    min = tiempos.tiempoMenor()
+
+    if min > 0:
+        aux = lista_escritorios.head
+        while aux:
+            cliente:Client = aux.data.getCliente()
+            if cliente:
+                tiempo = cliente.getTiempo()
+                if tiempo == min:
+                    print("Cliente: ",cliente.getNombre()," Atendido")
+                    aux.data.clienteAtendido()
+                    aux.data.addTiempoAtencion(cliente.getTiempoAtencion())
+                    punto_atencion.contarTransaccion()
+                    punto_atencion.addTiempoAtencion(cliente.getTiempoAtencion())
+                    punto_atencion.addTiempoEspera(cliente.tiempo_espera_total)
+                else:
+                    cliente.quitarTiempo(min)
+            aux = aux.next
+        
+        aux = clientes.head
+        while aux:
+            cliente:Client = aux.data
+            cliente.agregarTiempoEspera(min)
+            aux = aux.next
+    else:
+        print("Error, ningún cliente atendido")
+
+def graficarEstado(punto_atencion:Attention, lista_clientes:LinkedList):
+    s = Digraph()
+
+    txt_escritorios = """<<table border='0' cellborder='0'><tr><td width="500">ESCRITORIOS DE ATENCION</td></tr>
+    <tr><td><table color='orange' cellspacing='0' cellpadding='7'><tr><td>ESCRITORIO</td><td>CLIENTE</td></tr>"""
+
+    #OBTENER DATOS DE ESCRITORIOS DE ATENCION
+    activos_n = 0
+    desactivados_n = 0
+    aux = punto_atencion.getListaEscritorio().head
+    while aux:
+        escritorio:Desktop = aux.data
+        if escritorio.getEstado() or escritorio.getCliente():
+            activos_n += 1
+
+            if escritorio.getCliente():
+                cliente:Client = escritorio.getCliente()
+                txt_escritorios += "<tr><td><table border='0' cellborder='0'><tr><td>ID: "+escritorio.getId()+"</td></tr><tr><td>Encargado: "+escritorio.getEncargado()+"</td></tr><tr><td>Clientes atendidos: "+str(escritorio.getAtendidos())+"</td></tr><tr><td>Promedio de atención: "+str(escritorio.promedioAtencion())+"</td></tr><tr><td>Tiempo máximo de atención: "+str(escritorio.maximoAtencion())+"</td></tr><tr><td>Tiempo mínimo de atención: "+str(escritorio.minimoAtencion())+"</td></tr></table></td>"
+                txt_escritorios += "<td><table border='0' cellborder='0'><tr><td>Nombre: "+cliente.getNombre()+"</td></tr><tr><td>Tiempo restante de atención: "+str(cliente.getTiempo())+"</td></tr><tr><td>Tiempo de espera: "+str(cliente.tiempo_espera_total)+"</td></tr></table></td></tr>"
+            else:
+                txt_escritorios += "<tr><td><table border='0' cellborder='0'><tr><td>ID: "+escritorio.getId()+"</td></tr><tr><td>Encargado: "+escritorio.getEncargado()+"</td></tr><tr><td>Clientes atendidos: "+str(escritorio.getAtendidos())+"</td></tr><tr><td>Promedio de atención: "+str(escritorio.promedioAtencion())+"</td></tr><tr><td>Tiempo máximo de atención: "+str(escritorio.maximoAtencion())+"</td></tr><tr><td>Tiempo mínimo de atención: "+str(escritorio.minimoAtencion())+"</td></tr></table></td>"
+                txt_escritorios += "<td></td></tr>"
+        else:
+            desactivados_n += 1
+            txt_escritorios += "<tr><td bgcolor='#b8c0ff'><table border='0' cellborder='0'><tr><td>ID: "+escritorio.getId()+"</td></tr><tr><td>Encargado: "+escritorio.getEncargado()+"</td></tr><tr><td>Clientes atendidos: "+str(escritorio.getAtendidos())+"</td></tr><tr><td>Promedio de atención: "+str(escritorio.promedioAtencion())+"</td></tr><tr><td>Tiempo máximo de atención: "+str(escritorio.maximoAtencion())+"</td></tr><tr><td>Tiempo mínimo de atención: "+str(escritorio.minimoAtencion())+"</td></tr></table></td>"
+            txt_escritorios += "<td></td></tr>"
+        aux = aux.next
+
+    txt_escritorios += "</table></td></tr></table>>"
+    s.node('tab', label=txt_escritorios, shape='none')
+    
+    #OBTENER DATOS DE LA LISTA DE CLIENTES EN ESPERA
+    clientes_espera = 0
+    txt_clientes = """<<table border='0' cellborder='0'><tr><td width="450">CLIENTES EN ESPERA</td></tr><tr><td>
+    <table color='orange' cellspacing='0' cellpadding='7'><tr><td>No.</td><td>CLIENTES</td></tr>"""
+
+    aux = lista_clientes.head
+    while aux:
+        clientes_espera +=1
+        cliente:Client = aux.data
+        txt_clientes += "<tr><td>"+str(clientes_espera)+"</td><td><table border='0' cellborder='0'><tr><td>Nombre: "+cliente.getNombre()+"</td></tr><tr><td>Tiempo de atención: "+str(cliente.getTiempo())+"</td></tr><tr><td>Tiempo promedio de espera: "+str(cliente.getTiempoEsperaPromedio())+"</td></tr></table></td></tr>"
+        aux = aux.next
+
+    txt_clientes +="</table></td></tr></table>>"
+    s.node('clientes', label=txt_clientes, shape='none')
+    s.attr(label = "\nEscritorios activos: "+str(activos_n)+"\nEscritorios Inactivos: "+str(desactivados_n)+"\nClientes en espera: "+str(clientes_espera)+"\nTiempo promedio de atención: "+str(punto_atencion.promedioAtencion())+"\nTiempo máximo de atención: "+str(punto_atencion.maximoAtencion())+"\nTiempo mínimo de atención: "+str(punto_atencion.minimoAtencion())+"\nTiempo promedio de espera: "+str(punto_atencion.promedioEsperta())+"\nTiempo máximo de espera: "+str(punto_atencion.maximoEspera())+"\nTiempo mínimo de espera: "+str(punto_atencion.minimoEspera()), fontsize='25', pad="2", bgcolor="white")
+    
+    s.render('Datos/'+punto_atencion.getNombre()+'/'+str(punto_atencion.getNumeroTransacciones()),format='jpg')

@@ -3,8 +3,8 @@ class Node:
     def __init__(self,data):
         self.data = data
         self.next = None
+        self.prev = None
 
-#CLASE DE LA LISTA ENLAZADA PARA GUARGAR LOS PATRONES DE CADA PISO
 class LinkedList:
     def __init__(self):
         self.head = None
@@ -22,6 +22,7 @@ class LinkedList:
             self.last = nodo
         else:
             self.last.next = nodo
+            nodo.prev = self.last
             self.last = nodo
     
     # RETORNAR EL NÚMERO DE ELEMENTOS
@@ -57,4 +58,49 @@ class LinkedList:
             aux = self.head
             self.head = self.head.next
             return aux.data
+    
+    def tiempoMenor(self):
+        aux = self.head
+        menor = aux
+        if aux:
+            while aux:
+                if aux.next:
+                    if menor.data > aux.next.data:
+                        menor = aux.next
+                else:
+                    return menor.data
+                aux = aux.next
+        else:
+            return 0
+    
+    def tiempoMayor(self):
+        aux = self.head
+        menor = aux
+        if aux:
+            while aux:
+                if aux.next:
+                    if menor.data < aux.next.data:
+                        menor = aux.next
+                else:
+                    return menor.data
+                aux = aux.next
+        else:
+            return 0
+    
+    def tiempoPromedio(self):
+        if not self.emply():
+            return 0
+        else:
+            aux = self.head
+            count = 0
+            while aux:
+                count += aux.data
+                aux = aux.next
+
+            count = count/self.length()
+
+            return count
+        
+        
+
             
