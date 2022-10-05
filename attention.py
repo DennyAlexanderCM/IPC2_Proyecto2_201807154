@@ -1,12 +1,10 @@
 from linkend_list import LinkedList
-from stack import Stack
 class Attention():
     def __init__(self, id, nombre, direccion):
         self.id = id
         self.nombre = nombre
         self.direccion = direccion
         self.listaEscritorio = LinkedList()
-        self.escritoriosActivos = Stack()
         self.transaccion = 0
         self.tiempos_atencion = LinkedList()
         self.tiempos_espera = LinkedList()

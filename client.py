@@ -1,6 +1,3 @@
-from platform import release
-
-
 class Client:
     def __init__(self, DPI, nombre):
         self.DPI = DPI

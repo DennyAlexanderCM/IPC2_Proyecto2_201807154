@@ -2,7 +2,7 @@ class Transaction():
     def __init__(self, id, nombre, tiempoAtencion):
         self.id = id
         self.nombre = nombre
-        self.tiempoAtencion = tiempoAtencion
+        self.tiempo_atencion = tiempoAtencion
     
     def getId(self):
         return self.id
@@ -10,7 +10,7 @@ class Transaction():
         return self.nombre
 
     def getTiempo(self):
-        return self.tiempoAtencion
+        return self.tiempo_atencion
 
     def setId(self, id):
         self.id = id
@@ -19,7 +19,4 @@ class Transaction():
         self.nombre = nombre
     
     def setTiempo(self, tiempoAtencion):
-        self.tiempoAtencion = tiempoAtencion
-    
-    def printDates(self):
-        print(self.id, self.nombre, self.tiempoAtencion)
+        self.tiempo_atencion = tiempoAtencion

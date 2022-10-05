@@ -146,15 +146,13 @@ def XMLInitialSetup(data, configuracion_inicial:LinkedList):
         id_punto = configInicial.getAttribute("idPunto")
         #CREAMOS EL OBJETO DE LA CONFIGURACIONINICIAL
         configuracion = InitialConfiguration(id_config, id_empresa, id_punto)
-        #CREAMOS LA PILA QUE CONTENDRA LOS ESCRIORIOS
-        lista_escritorios = Stack()
         #CREAMOS LA LISTA QUE CONTENDRA LOS CLIENTES
         lista_clientes = LinkedList()
         # ESCRITORIO ACTIVOS
         escritorioActivos = configInicial.getElementsByTagName("escritorio")
         for escritorio in escritorioActivos:
             id_escritorio = escritorio.getAttribute("idEscritorio")
-            lista_escritorios.insert(id_escritorio)
+            configuracion.addEscritorioActivo(id_escritorio)
 
         ListaClientes = configInicial.getElementsByTagName("cliente")
         for cliente in ListaClientes:
@@ -176,8 +174,7 @@ def XMLInitialSetup(data, configuracion_inicial:LinkedList):
             
             obj_cliente.lista_transacciones = lista_transacciones
             lista_clientes.append(obj_cliente)
-        
-        configuracion.escritorios_activos = lista_escritorios
+            
         configuracion.listado_clientes = lista_clientes
         configuracion_inicial.append(configuracion)
 
@@ -376,7 +373,6 @@ def searchConfiguration(id_emresa, id_punto, configuraciones:LinkedList):
     return None
 
 def startTest(empresa: Business, punto_atencion:Attention, configuracion:InitialConfiguration):
-    escritorios_activos:Stack = configuracion.escritorios_activos
     lista_escritorios:LinkedList = punto_atencion.getListaEscritorio()
     transacciones = empresa.getTransacciones()
     clientes:LinkedList = configuracion.listado_clientes
@@ -411,14 +407,15 @@ def startTest(empresa: Business, punto_atencion:Attention, configuracion:Initial
                 escritorio:Desktop = aux.data
                 if escritorio.getEstado() is False:
                     escritorio.activar()
-                    escritorios_activos.insert(escritorio.getId())
+                    configuracion.addEscritorioActivo(escritorio.getId())
                     activar = False
                 aux= aux.next
-        # DESACTIVA EL ULTIMO ESCRITORIO DESACTIVADO
+        # DESACTIVA EL ULTIMO ESCRITORIO ACTIVADO
         elif selection == 3:
             # ELIMINAMOS Y RETORNA EL VALOR ELIMINADO
-            escritorio = escritorios_activos.pop()
+            escritorio = configuracion.getEscritoriosActivos().pop()
             if escritorio:
+
                 desactivar = True
                 aux = lista_escritorios.head
                 while aux and desactivar:
